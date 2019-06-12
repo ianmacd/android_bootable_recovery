@@ -20,6 +20,7 @@
 		<string name="cache">Cache</string>
 		<string name="data">Data</string>
 		<string name="data_backup">Data (excl. storage)</string>
+		<string name="data_backup_inc">Data (incl. storage)</string>
 		<string name="sdcard">SD card</string>
 		<string name="internal">Internal Storage</string>
 		<string name="microsd">Micro SD card</string>
@@ -139,6 +140,7 @@
 		<string name="factory_reset_btn">Factory Reset</string>
 		<string name="factory_reset1">Wipes Data, Cache, and Dalvik</string>
 		<string name="factory_reset2">(not including internal storage)</string>
+		<string name="factory_reset2_inc">(not including internal TWRP back-ups)</string>
 		<string name="factory_reset3">Most of the time this is</string>
 		<string name="factory_reset4">the only wipe that you need.</string>
 		<string name="factory_resetting">Factory Reset...</string>
@@ -622,8 +624,10 @@
 		<string name="cannot_wipe">Partition {1} cannot be wiped.</string>
 		<string name="remove_all">Removing all files under '{1}'</string>
 		<string name="wiping_data">Wiping data without wiping /data/media ...</string>
+		<string name="wiping_data_inc">Wiping data without affecting /data/media/0/TWRP/BACKUPS...</string>
 		<string name="backing_up">Backing up {1}...</string>
 		<string name="backup_storage_warning">Backups of {1} do not include any files in internal storage such as pictures or downloads.</string>
+		<string name="backup_storage_warning_inc">Back-ups of {1} include all files in internal storage, such as media and downloads.</string>
 		<string name="backing">Backing Up</string>
 		<string name="backup_size">Backup file size for '{1}' is 0 bytes.</string>
 		<string name="datamedia_fs_restore">WARNING: This /data backup was made with {1} file system! The backup may not boot unless you change back to {1}.</string>
