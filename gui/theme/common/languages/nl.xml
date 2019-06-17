@@ -20,6 +20,7 @@
 		<string name="cache">Cache</string>
 		<string name="data">Data</string>
 		<string name="data_backup">Data (exclusief /data/media)</string>
+		<string name="data_backup_inc">Data (inclusief /data/media)</string>
 		<string name="sdcard">SD-kaart</string>
 		<string name="internal">Interne opslag</string>
 		<string name="microsd">Micro SD-kaart</string>
@@ -139,6 +140,7 @@
 		<string name="factory_reset_btn">Fabrieksinstellingen herstellen</string>
 		<string name="factory_reset1">Wist Data, Cache en Dalvik</string>
 		<string name="factory_reset2">(exclusief interne opslag)</string>
+		<string name="factory_reset2_inc">(exclusief interne TWRP-backups)</string>
 		<string name="factory_reset3">Meestal kan worden volstaan</string>
 		<string name="factory_reset4">met dit type opschoning.</string>
 		<string name="factory_resetting">Fabrieksinstellingen worden hersteld...</string>
@@ -622,8 +624,10 @@
 		<string name="cannot_wipe">Partitie {1} kan niet worden gewist.</string>
 		<string name="remove_all">Alle bestanden onder '{1}' worden verwijderd</string>
 		<string name="wiping_data">Data-partitie wordt gewist m.u.v. /data/media...</string>
+		<string name="wiping_data_inc">Data-partitie wordt gewist m.u.v. /data/media/0/TWRP/BACKUPS...</string>
 		<string name="backing_up">{1} wordt geback-upt...</string>
 		<string name="backup_storage_warning">Van back-ups van {1} zijn uitgezonderd de bestanden in interne opslag, zoals plaatjes en downloads.</string>
+		<string name="backup_storage_warning_inc">Back-ups van {1} zijn inclusief alle bestanden in interne opslag, waaronder plaatjes en downloads.</string>
 		<string name="backing">Wordt geback-upt</string>
 		<string name="backup_size">Back-upgrootte van '{1}' bedraagt 0 bytes.</string>
 		<string name="datamedia_fs_restore">WAARSCHUWING: Deze back-up van /data is gemaakt met het {1}-bestandssysteem! Mogelijk start dee back-up pas weer op wanneer er naar {1} wordt teruggeschakeld..</string>
