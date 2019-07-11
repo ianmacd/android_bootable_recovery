@@ -2628,6 +2628,11 @@
 		<page name="restore_run">
 			<template name="page"/>
 
+			<image>
+				<image resource="no_nav_bg"/>
+				<placement x="0" y="0"/>
+			</image>
+
 			<text style="text_l">
 				<placement x="%col1_x_header%" y="%row3_header_y%"/>
 				<text>{@restore_hdr=Restore}</text>
@@ -4063,8 +4068,8 @@
 			<background color="%semi_transparent%"/>
 
 			<image>
-				<image resource="unlock_icon"/>
-				<placement x="%center_x%" y="%row10_y%" placement="4"/>
+				<image resource="unlock_bg"/>
+				<placement x="0" y="0"/>
 			</image>
 
 			<slider>
