@@ -1131,7 +1131,7 @@ void TWPartition::Setup_Data_Media() {
 			UnMount(true);
 		}
 	}
-	ExcludeAll(Mount_Point + "/media");
+	ExcludeAll(Mount_Point + "/media/0/TWRP/BACKUPS");
 }
 
 void TWPartition::Find_Real_Block_Device(string& Block, bool Display_Error) {
@@ -2382,7 +2382,7 @@ bool TWPartition::Wipe_Data_Without_Wiping_Media() {
 	if (!Mount(true))
 		return false;
 
-	gui_msg("wiping_data=Wiping data without wiping /data/media ...");
+	gui_msg("wiping_data_inc=Wiping data without affecting /data/media/0/TWRP/BACKUPS...");
 	ret = Wipe_Data_Without_Wiping_Media_Func(Mount_Point + "/");
 	if (ret)
 		gui_msg("done=Done.");
@@ -2502,7 +2502,7 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 	Backup_FileName = Backup_Name + "." + Current_File_System + ".win";
 	Full_FileName = part_settings->Backup_Folder + "/" + Backup_FileName;
 	if (Has_Data_Media)
-		gui_msg(Msg(msg::kWarning, "backup_storage_warning=Backups of {1} do not include any files in internal storage such as pictures or downloads.")(Display_Name));
+		gui_msg(Msg(msg::kWarning, "backup_storage_warning_inc=Back-ups of {1} include all files in internal storage, such as media and downloads.")(Display_Name));
 	tar.part_settings = part_settings;
 	tar.backup_exclusions = &backup_exclusions;
 	tar.setdir(Backup_Path);

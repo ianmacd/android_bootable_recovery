@@ -1004,7 +1004,7 @@
 			<text style="text_m_accent">
 				<condition var1="tw_has_data_media" var2="1"/>
 				<placement x="%center_x%" y="%row3_y%" placement="5"/>
-				<text>{@factory_reset2=(not including internal storage)}</text>
+				<text>{@factory_reset2_inc=(not including internal TWRP back-ups)}</text>
 			</text>
 
 			<text style="text_m_accent">

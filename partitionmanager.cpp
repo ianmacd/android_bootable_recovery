@@ -2611,7 +2611,7 @@ void TWPartitionManager::Translate_Partition(const char* path, const char* resou
 	TWPartition* part = PartitionManager.Find_Partition_By_Path(path);
 	if (part) {
 		if (part->Is_Adopted_Storage) {
-			part->Backup_Display_Name = part->Display_Name + " - " + gui_lookup("data_backup", "Data (excl. storage)");
+			part->Backup_Display_Name = part->Display_Name + " - " + gui_lookup("data_backup_inc", "Data (incl. storage)");
 			part->Display_Name = part->Display_Name + " - " + gui_lookup("data", "Data");
 			part->Storage_Name = part->Storage_Name + " - " + gui_lookup("adopted_storage", "Adopted Storage");
 		} else {
@@ -2655,10 +2655,10 @@ void TWPartitionManager::Translate_Partition_Display_Names() {
 		Translate_Partition("/internal_sdcard", "sdcard", "SDCard", "sdcard", "SDCard");
 		Translate_Partition("/emmc", "sdcard", "SDCard", "sdcard", "SDCard");
 	} else {
-		Translate_Partition("/data", "data", "Data", "internal", "Internal Storage", "data_backup", "Data (excl. storage)");
+		Translate_Partition("/data", "data", "Data", "internal", "Internal Storage", "data_backup_inc", "Data (incl. storage)");
 	}
-	Translate_Partition("/external_sd", "microsd", "Micro SDCard", "microsd", "Micro SDCard", "data_backup", "Data (excl. storage)");
-	Translate_Partition("/external_sdcard", "microsd", "Micro SDCard", "microsd", "Micro SDCard", "data_backup", "Data (excl. storage)");
+	Translate_Partition("/external_sd", "microsd", "Micro SDCard", "microsd", "Micro SDCard", "data_backup_inc", "Data (incl. storage)");
+	Translate_Partition("/external_sdcard", "microsd", "Micro SDCard", "microsd", "Micro SDCard", "data_backup_inc", "Data (incl. storage)");
 	Translate_Partition("/usb-otg", "usbotg", "USB OTG", "usbotg", "USB OTG");
 	Translate_Partition("/sd-ext", "sdext", "SD-EXT");
 
