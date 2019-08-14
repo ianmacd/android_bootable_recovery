@@ -70,47 +70,46 @@ bool ExtractPackageRecursive(ZipArchiveHandle zip, const std::string& zip_path,
         std::string entry_name(name.name, name.name + name.name_length);
         CHECK_LE(prefix_path.size(), entry_name.size());
         std::string path = target_dir + entry_name.substr(prefix_path.size());
-        // Skip dir.
         if (path.back() == '/') {
-            continue;
-        }
-        //TODO(b/31917448) handle the symlink.
 
-        if (dirCreateHierarchy(path.c_str(), UNZIP_DIRMODE, timestamp, true, sehnd) != 0) {
-            LOG(ERROR) << "failed to create dir for " << path;
-            return false;
-        }
+	    if (dirCreateHierarchy(path.c_str(), UNZIP_DIRMODE, timestamp, true, sehnd) != 0) {
+                LOG(ERROR) << "failed to create dir " << path;
+                return false;
+            }
+        } else {
+            //TODO(b/31917448) handle the symlink.
 
-        char *secontext = NULL;
-        if (sehnd) {
-            selabel_lookup(sehnd, &secontext, path.c_str(), UNZIP_FILEMODE);
-            setfscreatecon(secontext);
-        }
-        android::base::unique_fd fd(open(path.c_str(), O_CREAT|O_WRONLY|O_TRUNC, UNZIP_FILEMODE));
-        if (fd == -1) {
-            PLOG(ERROR) << "Can't create target file \"" << path << "\"";
-            return false;
-        }
-        if (secontext) {
-            freecon(secontext);
-            setfscreatecon(NULL);
-        }
+            char *secontext = NULL;
+            if (sehnd) {
+                selabel_lookup(sehnd, &secontext, path.c_str(), UNZIP_FILEMODE);
+                setfscreatecon(secontext);
+            }
+            android::base::unique_fd fd(open(path.c_str(), O_CREAT|O_WRONLY|O_TRUNC, UNZIP_FILEMODE));
+            if (fd == -1) {
+                PLOG(ERROR) << "Can't create target file \"" << path << "\"";
+                return false;
+            }
+            if (secontext) {
+                freecon(secontext);
+                setfscreatecon(NULL);
+            }
 
-        int err = ExtractEntryToFile(zip, &entry, fd);
-        if (err != 0) {
-            LOG(ERROR) << "Error extracting \"" << path << "\" : " << ErrorCodeString(err);
-            return false;
-        }
+            int err = ExtractEntryToFile(zip, &entry, fd);
+            if (err != 0) {
+                LOG(ERROR) << "Error extracting \"" << path << "\" : " << ErrorCodeString(err);
+                return false;
+            }
 
-        if (fsync(fd) != 0) {
-            PLOG(ERROR) << "Error syncing file descriptor when extracting \"" << path << "\"";
-            return false;
-        }
+            if (fsync(fd) != 0) {
+                PLOG(ERROR) << "Error syncing file descriptor when extracting \"" << path << "\"";
+                return false;
+            }
 
-        if (timestamp != nullptr && utime(path.c_str(), timestamp)) {
-            PLOG(ERROR) << "Error touching \"" << path << "\"";
-            return false;
-        }
+            if (timestamp != nullptr && utime(path.c_str(), timestamp)) {
+                PLOG(ERROR) << "Error touching \"" << path << "\"";
+                return false;
+            }
+	}
 
         LOG(INFO) << "Extracted file \"" << path << "\"";
         ++extractCount;

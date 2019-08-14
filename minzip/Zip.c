@@ -926,28 +926,24 @@ bool mzExtractRecursive(const ZipArchive *pArchive,
 #define UNZIP_DIRMODE 0755
 #define UNZIP_FILEMODE 0644
         /*
-         * Create the file or directory. We ignore directory entries
-         * because we recursively create paths to each file entry we encounter
-         * in the zip archive anyway.
+         * Create the file or directory.
          *
          * NOTE: A "directory entry" in a zip archive is just a zero length
          * entry that ends in a "/". They're not mandatory and many tools get
-         * rid of them. We need to process them only if we want to preserve
-         * empty directories from the archive.
+         * rid of them. Nevertheless, we process them to preserve empty
+         * directories from the archive.
          */
-        if (pEntry->fileName[pEntry->fileNameLen-1] != '/') {
-            /* This is not a directory.  First, make sure that
-             * the containing directory exists.
-             */
+        if (pEntry->fileName[pEntry->fileNameLen-1] == '/') {
+            /* This is a directory. */
             int ret = dirCreateHierarchy(
                     targetFile, UNZIP_DIRMODE, timestamp, true, sehnd);
             if (ret != 0) {
-                LOGE("Can't create containing directory for \"%s\": %s\n",
+                LOGE("Can't create directory \"%s\": %s\n",
                         targetFile, strerror(errno));
                 ok = false;
                 break;
             }
-
+	} else {
             /*
              * The entry is a regular file or a symlink. Open the target for writing.
              *
