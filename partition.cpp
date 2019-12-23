@@ -662,7 +662,14 @@ void TWPartition::Setup_Data_Partition(bool Display_Error) {
 			LOGERR("Primary block device '%s' for mount point '%s' is not present!\n", Primary_Block_Device.c_str(), Mount_Point.c_str());
 		}
 	} else {
-		Decrypt_FBE_DE();
+
+		if (!Decrypt_FBE_DE()) {
+			LOGINFO("Trying wrapped key.\n");
+			property_set("fbe.data.wrappedkey", "true");
+				if (!Decrypt_FBE_DE()) {
+					LOGERR("Unable to decrypt FBE device\n");
+				}
+		}
 	}
 	if (datamedia && (!Is_Encrypted || (Is_Encrypted && Is_Decrypted))) {
 		Setup_Data_Media();
@@ -1383,7 +1390,7 @@ bool TWPartition::Is_File_System_Writable(void) {
 
 bool TWPartition::Mount(bool Display_Error) {
 	int exfat_mounted = 0;
-	unsigned long flags = Mount_Flags;
+	unsigned int flags = Mount_Flags;
 
 	if (Is_Mounted()) {
 		return true;
