@@ -662,7 +662,14 @@ void TWPartition::Setup_Data_Partition(bool Display_Error) {
 			LOGERR("Primary block device '%s' for mount point '%s' is not present!\n", Primary_Block_Device.c_str(), Mount_Point.c_str());
 		}
 	} else {
-		Decrypt_FBE_DE();
+
+		if (!Decrypt_FBE_DE()) {
+			LOGINFO("Trying wrapped key.\n");
+			property_set("fbe.data.wrappedkey", "true");
+				if (!Decrypt_FBE_DE()) {
+					LOGERR("Unable to decrypt FBE device\n");
+				}
+		}
 	}
 	if (datamedia && (!Is_Encrypted || (Is_Encrypted && Is_Decrypted))) {
 		Setup_Data_Media();
@@ -1121,6 +1128,7 @@ void TWPartition::Setup_Data_Media() {
 		DataManager::SetValue("tw_has_internal", 1);
 		DataManager::SetValue("tw_has_data_media", 1);
 		backup_exclusions.add_absolute_dir("/data/data/com.google.android.music/files");
+		backup_exclusions.add_absolute_dir("/data/per_boot"); // DJ9,14Jan2020 - exclude this dir to prevent "error 255" on AOSP ROMs that create and lock it
 		wipe_exclusions.add_absolute_dir(Mount_Point + "/misc/vold"); // adopted storage keys
 		ExcludeAll(Mount_Point + "/.layout_version");
 		ExcludeAll(Mount_Point + "/system/storage.xml");
@@ -1383,7 +1391,7 @@ bool TWPartition::Is_File_System_Writable(void) {
 
 bool TWPartition::Mount(bool Display_Error) {
 	int exfat_mounted = 0;
-	unsigned long flags = Mount_Flags;
+	unsigned int flags = Mount_Flags;
 
 	if (Is_Mounted()) {
 		return true;
@@ -2479,7 +2487,7 @@ bool TWPartition::Backup_Tar(PartitionSettings *part_settings, pid_t *tar_fork_p
 	if (!Mount(true))
 		return false;
 
-	TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, Backup_Display_Name, "Backing Up");
+	TWFunc::GUI_Operation_Text(TW_BACKUP_TEXT, Backup_Display_Name, gui_parse_text("{@backing}"));
 	gui_msg(Msg("backing_up=Backing up {1}...")(Backup_Display_Name));
 
 	DataManager::GetValue(TW_USE_COMPRESSION_VAR, tar.use_compression);

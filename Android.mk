@@ -515,6 +515,31 @@ ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28; echo $$?),0)
 endif
 endif
 
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26; echo $$?),0)
+    TWRP_REQUIRED_MODULES += ld.config.txt
+    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28; echo $$?),0)
+	ifeq ($(BOARD_VNDK_RUNTIME_DISABLE),true)
+            LOCAL_POST_INSTALL_CMD += \
+	    sed 's/\(namespace.default.search.paths\)\s\{1,\}=/namespace.default.search.paths  = \/sbin\n\1 +=/' \
+                    $(TARGET_OUT_ETC)/ld.config.vndk_lite.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
+        else
+            LOCAL_POST_INSTALL_CMD += \
+	    sed 's/\(namespace.default.search.paths\)\s\{1,\}=/namespace.default.search.paths  = \/sbin\n\1 +=/' \
+                $(TARGET_OUT_ETC)/ld.config.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
+        endif
+    else
+        ifeq ($(BOARD_VNDK_RUNTIME_DISABLE),true)
+            LOCAL_POST_INSTALL_CMD += \
+            sed '0,/^namespace.default.search.paths\s\{1,\}/!b;//a\namespace.default.search.paths += \/sbin' \
+                    $(TARGET_OUT_ETC)/ld.config.vndk_lite.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
+        else
+            LOCAL_POST_INSTALL_CMD += \
+            sed '0,/^namespace.default.search.paths\s\{1,\}/!b;//a\namespace.default.search.paths += \/sbin' \
+                    $(TARGET_OUT_ETC)/ld.config.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
+        endif
+    endif
+endif
+
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 25; echo $$?),0)
     TWRP_REQUIRED_MODULES += file_contexts_text
 endif
