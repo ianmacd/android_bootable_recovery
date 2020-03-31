@@ -515,7 +515,7 @@ int TWPartitionManager::Mount_By_Path(string Path, bool Display_Error) {
 	bool found = false;
 	string Local_Path = TWFunc::Get_Root_Path(Path);
 
-	if (Local_Path == "/tmp" || Local_Path == "/")
+	if (Local_Path == "/tmp" || Local_Path == "/" || Local_Path == "/etc")
 		return true;
 
 	// Iterate through all partitions
@@ -2960,7 +2960,7 @@ void TWPartitionManager::read_uevent() {
 
 	int len = recv(uevent_pfd.fd, buf, sizeof(buf), MSG_DONTWAIT);
 	if (len == -1) {
-		LOGERR("recv error on uevent\n");
+		LOGINFO("recv error on uevent\n");
 		return;
 	}
 	/*int i = 0; // Print all uevent output for test /debug
