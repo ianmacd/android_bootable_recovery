@@ -754,6 +754,12 @@ extern "C" int gui_init(void)
 	gr_init();
 	TWFunc::Set_Brightness(DataManager::GetStrValue("tw_brightness"));
 
+#ifdef TW_SCREEN_BLANK_ON_BOOT
+        printf("TW_SCREEN_BLANK_ON_BOOT := true\n");
+        blankTimer.blank();
+        blankTimer.resetTimerAndUnblank();
+#endif
+
 	// load and show splash screen
 	if (PageManager::LoadPackage("splash", TWRES "splash.xml", "splash")) {
 		LOGERR("Failed to load splash screen XML.\n");
@@ -858,10 +864,12 @@ extern "C" int gui_loadCustomResources(void)
 #endif
 	return 0;
 
+#ifndef TW_OEM_BUILD
 error:
 	LOGERR("An internal error has occurred: unable to load theme.\n");
 	gGuiInitialized = 0;
 	return -1;
+#endif
 }
 
 extern "C" int gui_start(void)
@@ -869,7 +877,7 @@ extern "C" int gui_start(void)
 	return gui_startPage("main", 1, 0);
 }
 
-extern "C" int gui_startPage(const char *page_name, const int allow_commands, int stop_on_page_done)
+extern "C" int gui_startPage(const char *page_name, __attribute__((unused)) const int allow_commands, int stop_on_page_done)
 {
 	if (!gGuiInitialized)
 		return -1;

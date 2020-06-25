@@ -143,6 +143,9 @@ ifeq ($(shell test $(PLATFORM_SDK_VERSION) -lt 23; echo $$?),0)
     LOCAL_SHARED_LIBRARIES += libstlport
     LOCAL_CFLAGS += -DTW_NO_SHA2_LIBRARY
 endif
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -lt 25; echo $$?),0)
+    LOCAL_CFLAGS += -DUSE_OLD_BASE_INCLUDE
+endif
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -lt 24; echo $$?),0)
     LOCAL_SHARED_LIBRARIES += libmincrypttwrp
     LOCAL_C_INCLUDES += $(LOCAL_PATH)/libmincrypt/includes
@@ -151,7 +154,7 @@ else
     LOCAL_SHARED_LIBRARIES += libcrypto
 endif
 
-ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 24; echo $$?),0)
+ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 23; echo $$?),0)
     LOCAL_SHARED_LIBRARIES += libbase
 endif
 
@@ -177,7 +180,11 @@ endif
 ifeq ($(TARGET_USERIMAGES_USE_EXT4), true)
     ifeq ($(shell test $(PLATFORM_SDK_VERSION) -lt 28; echo $$?),0)
         LOCAL_CFLAGS += -DUSE_EXT4
-        LOCAL_C_INCLUDES += system/extras/ext4_utils
+    endif
+    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -le 28; echo $$?),0)
+        LOCAL_C_INCLUDES += system/extras/ext4_utils \
+            system/extras/ext4_utils/include \
+	    $(commands_TWRP_local_path)/crypto/ext4crypt
         LOCAL_SHARED_LIBRARIES += libext4_utils
         ifneq ($(wildcard external/lz4/Android.mk),)
             #LOCAL_STATIC_LIBRARIES += liblz4
@@ -206,8 +213,6 @@ else
     LOCAL_STATIC_LIBRARIES += $(TARGET_RECOVERY_TWRP_LIB)
 endif
 
-LOCAL_C_INCLUDES += system/extras/ext4_utils
-
 tw_git_revision := $(shell git -C $(LOCAL_PATH) rev-parse --short=8 HEAD 2>/dev/null)
 ifeq ($(shell git -C $(LOCAL_PATH) diff --quiet; echo $$?),1)
     tw_git_revision := $(tw_git_revision)-dirty
@@ -215,6 +220,11 @@ endif
 LOCAL_CFLAGS += -DTW_GIT_REVISION='"$(tw_git_revision)"'
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28; echo $$?),0)
+ifeq ($(TW_FORCE_USE_BUSYBOX), true)
+    TW_USE_TOOLBOX := false
+else
+    TW_USE_TOOLBOX := true
+endif
 ifeq ($(TW_EXCLUDE_MTP),)
     LOCAL_SHARED_LIBRARIES += libtwrpmtp-ffs
 endif
@@ -333,6 +343,9 @@ ifeq ($(TW_INCLUDE_CRYPTO), true)
     endif
     ifneq ($(TW_CRYPTO_USE_SYSTEM_VOLD),)
     ifneq ($(TW_CRYPTO_USE_SYSTEM_VOLD),false)
+		ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26; echo $$?),0)
+			TW_INCLUDE_LIBRESETPROP := true
+		endif
         LOCAL_CFLAGS += -DTW_CRYPTO_USE_SYSTEM_VOLD
         LOCAL_STATIC_LIBRARIES += libvolddecrypt
     endif
@@ -398,6 +411,20 @@ endif
 ifneq ($(TW_CLOCK_OFFSET),)
 	LOCAL_CFLAGS += -DTW_CLOCK_OFFSET=$(TW_CLOCK_OFFSET)
 endif
+ifneq ($(TW_OVERRIDE_SYSTEM_PROPS),)
+    TW_INCLUDE_LIBRESETPROP := true
+    LOCAL_CFLAGS += -DTW_OVERRIDE_SYSTEM_PROPS=$(TW_OVERRIDE_SYSTEM_PROPS)
+endif
+ifneq ($(TW_INCLUDE_LIBRESETPROP),)
+    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -lt 24; echo $$?),0)
+        $(warning libresetprop is not available for android < 7)
+    else
+        LOCAL_SHARED_LIBRARIES += libresetprop
+        LOCAL_C_INCLUDES += external/magisk-prebuilt/include
+        LOCAL_CFLAGS += -DTW_INCLUDE_LIBRESETPROP
+    endif
+endif
+
 TWRP_REQUIRED_MODULES += \
     dump_image \
     erase_image \
@@ -517,27 +544,10 @@ endif
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 26; echo $$?),0)
     TWRP_REQUIRED_MODULES += ld.config.txt
-    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 28; echo $$?),0)
-	ifeq ($(BOARD_VNDK_RUNTIME_DISABLE),true)
-            LOCAL_POST_INSTALL_CMD += \
-	    sed 's/\(namespace.default.search.paths\)\s\{1,\}=/namespace.default.search.paths  = \/sbin\n\1 +=/' \
-                    $(TARGET_OUT_ETC)/ld.config.vndk_lite.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
-        else
-            LOCAL_POST_INSTALL_CMD += \
-	    sed 's/\(namespace.default.search.paths\)\s\{1,\}=/namespace.default.search.paths  = \/sbin\n\1 +=/' \
-                $(TARGET_OUT_ETC)/ld.config.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
-        endif
-    else
-        ifeq ($(BOARD_VNDK_RUNTIME_DISABLE),true)
-            LOCAL_POST_INSTALL_CMD += \
-            sed '0,/^namespace.default.search.paths\s\{1,\}/!b;//a\namespace.default.search.paths += \/sbin' \
-                    $(TARGET_OUT_ETC)/ld.config.vndk_lite.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
-        else
-            LOCAL_POST_INSTALL_CMD += \
-            sed '0,/^namespace.default.search.paths\s\{1,\}/!b;//a\namespace.default.search.paths += \/sbin' \
-                    $(TARGET_OUT_ETC)/ld.config.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
-        endif
-    endif
+    TWRP_REQUIRED_MODULES += init.recovery.ldconfig.rc
+    LOCAL_POST_INSTALL_CMD += \
+        sed 's/\(namespace.default.search.paths\)\s\{1,\}=/namespace.default.search.paths  = \/sbin\n\1 +=/' \
+            $(TARGET_OUT_ETC)/ld.config*.txt > $(TARGET_RECOVERY_ROOT_OUT)/sbin/ld.config.txt;
 endif
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -ge 25; echo $$?),0)
@@ -885,6 +895,11 @@ include $(commands_TWRP_local_path)/injecttwrp/Android.mk \
 
 ifeq ($(shell test $(PLATFORM_SDK_VERSION) -lt 24; echo $$?),0)
     include $(commands_TWRP_local_path)/libmincrypt/Android.mk
+endif
+
+ifneq ($(TW_OZIP_DECRYPT_KEY),)
+    TWRP_REQUIRED_MODULES += ozip_decrypt
+    include $(commands_TWRP_local_path)/ozip_decrypt/Android.mk
 endif
 
 ifeq ($(TW_INCLUDE_CRYPTO), true)

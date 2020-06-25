@@ -59,6 +59,10 @@ extern "C" {
 	#include "libcrecovery/common.h"
 }
 
+#ifdef TW_INCLUDE_LIBRESETPROP
+    #include <resetprop.h>
+#endif
+
 struct selabel_handle *selinux_handle;
 
 /* Execute a command */
@@ -580,11 +584,11 @@ void TWFunc::Copy_Log(string Source, string Destination) {
 }
 
 void TWFunc::Update_Log_File(void) {
-	std::string recoveryDir = get_cache_dir() + "recovery/";
+	std::string recoveryDir = get_log_dir() + "recovery/";
 
-	if (get_cache_dir() == NON_AB_CACHE_DIR) {
-		if (!PartitionManager.Mount_By_Path(NON_AB_CACHE_DIR, false)) {
-			LOGINFO("Failed to mount %s for TWFunc::Update_Log_File\n", NON_AB_CACHE_DIR);
+	if (get_log_dir() == CACHE_LOGS_DIR) {
+		if (!PartitionManager.Mount_By_Path(CACHE_LOGS_DIR, false)) {
+			LOGINFO("Failed to mount %s for TWFunc::Update_Log_File\n", CACHE_LOGS_DIR);
 		}
 	}
 
@@ -616,7 +620,7 @@ void TWFunc::Update_Log_File(void) {
 		}
 	}
 
-	if (get_cache_dir() == NON_AB_CACHE_DIR) {
+	if (get_log_dir() == CACHE_LOGS_DIR) {
 		if (PartitionManager.Mount_By_Path("/cache", false)) {
 			if (unlink("/cache/recovery/command") && errno != ENOENT) {
 				LOGINFO("Can't unlink %s\n", "/cache/recovery/command");
@@ -637,6 +641,7 @@ int TWFunc::tw_reboot(RebootCommand command)
 {
 	DataManager::Flush();
 	Update_Log_File();
+
 	// Always force a sync before we reboot
 	sync();
 
@@ -891,19 +896,23 @@ string TWFunc::Get_Current_Date() {
 }
 
 string TWFunc::System_Property_Get(string Prop_Name) {
-	bool mount_state = PartitionManager.Is_Mounted_By_Path(PartitionManager.Get_Android_Root_Path());
+	return System_Property_Get(Prop_Name, PartitionManager, PartitionManager.Get_Android_Root_Path());
+}
+
+string TWFunc::System_Property_Get(string Prop_Name, TWPartitionManager &PartitionManager, string Mount_Point) {
+	bool mount_state = PartitionManager.Is_Mounted_By_Path(Mount_Point);
 	std::vector<string> buildprop;
 	string propvalue;
-	if (!PartitionManager.Mount_By_Path(PartitionManager.Get_Android_Root_Path(), true))
+	if (!PartitionManager.Mount_By_Path(Mount_Point, true))
 		return propvalue;
-	string prop_file = "/system/build.prop";
+	string prop_file = Mount_Point + "/build.prop";
 	if (!TWFunc::Path_Exists(prop_file))
-		prop_file = PartitionManager.Get_Android_Root_Path() + "/system/build.prop"; // for devices with system as a root file system (e.g. Pixel)
+		prop_file = Mount_Point + "/system/build.prop"; // for devices with system as a root file system (e.g. Pixel)
 	if (TWFunc::read_file(prop_file, buildprop) != 0) {
 		LOGINFO("Unable to open build.prop for getting '%s'.\n", Prop_Name.c_str());
 		DataManager::SetValue(TW_BACKUP_NAME, Get_Current_Date());
 		if (!mount_state)
-			PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), false);
+			PartitionManager.UnMount_By_Path(Mount_Point, false);
 		return propvalue;
 	}
 	int line_count = buildprop.size();
@@ -916,12 +925,12 @@ string TWFunc::System_Property_Get(string Prop_Name) {
 		if (propname == Prop_Name) {
 			propvalue = buildprop.at(index).substr(end_pos + 1, buildprop.at(index).size());
 			if (!mount_state)
-				PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), false);
+				PartitionManager.UnMount_By_Path(Mount_Point, false);
 			return propvalue;
 		}
 	}
 	if (!mount_state)
-		PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), false);
+		PartitionManager.UnMount_By_Path(Mount_Point, false);
 	return propvalue;
 }
 
@@ -1238,20 +1247,20 @@ int TWFunc::stream_adb_backup(string &Restore_Name) {
 	return ret;
 }
 
-std::string TWFunc::get_cache_dir() {
-	if (PartitionManager.Find_Partition_By_Path(NON_AB_CACHE_DIR) == NULL) {
-		if (PartitionManager.Find_Partition_By_Path(AB_CACHE_DIR) == NULL) {
-			if (PartitionManager.Find_Partition_By_Path(PERSIST_CACHE_DIR) == NULL) {
+std::string TWFunc::get_log_dir() {
+	if (PartitionManager.Find_Partition_By_Path(CACHE_LOGS_DIR) == NULL) {
+		if (PartitionManager.Find_Partition_By_Path(DATA_LOGS_DIR) == NULL) {
+			if (PartitionManager.Find_Partition_By_Path(PERSIST_LOGS_DIR) == NULL) {
 				LOGINFO("Unable to find a directory to store TWRP logs.");
 				return "";
 			}
-			return PERSIST_CACHE_DIR;
+			return PERSIST_LOGS_DIR;
 		} else {
-			return AB_CACHE_DIR;
+			return DATA_LOGS_DIR;
 		}
 	}
 	else {
-		return NON_AB_CACHE_DIR;
+		return CACHE_LOGS_DIR;
 	}
 }
 
@@ -1274,12 +1283,12 @@ void TWFunc::check_selinux_support() {
 		printf("SELinux contexts loaded from /file_contexts\n");
 	{ // Check to ensure SELinux can be supported by the kernel
 		char *contexts = NULL;
-		std::string cacheDir = TWFunc::get_cache_dir();
+		std::string cacheDir = TWFunc::get_log_dir();
 		std::string se_context_check = cacheDir + "recovery/";
 		int ret = 0;
 
-		if (cacheDir == NON_AB_CACHE_DIR) {
-			PartitionManager.Mount_By_Path(NON_AB_CACHE_DIR, false);
+		if (cacheDir == CACHE_LOGS_DIR) {
+			PartitionManager.Mount_By_Path(CACHE_LOGS_DIR, false);
 		}
 		if (TWFunc::Path_Exists(se_context_check)) {
 			ret = lgetfilecon(se_context_check.c_str(), &contexts);
@@ -1313,6 +1322,46 @@ bool TWFunc::Is_TWRP_App_In_System() {
 		}
 	}
 	DataManager::SetValue("tw_app_installed_in_system", 0);
+	PartitionManager.UnMount_By_Path(PartitionManager.Get_Android_Root_Path(), false);
 	return false;
+}
+
+int TWFunc::Property_Override(string Prop_Name, string Prop_Value) {
+#ifdef TW_INCLUDE_LIBRESETPROP
+    return setprop(Prop_Name.c_str(), Prop_Value.c_str(), false);
+#else
+    return -2;
+#endif
+}
+
+bool TWFunc::Get_Encryption_Policy(ext4_encryption_policy &policy, std::string path) {
+#ifdef TW_INCLUDE_FBE
+	if (!TWFunc::Path_Exists(path)) {
+		LOGERR("Unable to find %s to get policy\n", path.c_str());
+		return false;
+	}
+	if (!e4crypt_policy_get_struct(path.c_str(), &policy)) {
+		LOGERR("No policy set for path %s\n", path.c_str());
+		return false;
+	}
+#endif
+	return true;
+}
+
+bool TWFunc::Set_Encryption_Policy(std::string path, const ext4_encryption_policy &policy) {
+#ifdef TW_INCLUDE_FBE
+	if (!TWFunc::Path_Exists(path)) {
+		LOGERR("unable to find %s to set policy\n", path.c_str());
+		return false;
+	}
+	char binary_policy[EXT4_KEY_DESCRIPTOR_SIZE];
+	char policy_hex[EXT4_KEY_DESCRIPTOR_SIZE_HEX];
+	policy_to_hex(binary_policy, policy_hex);
+	if (!e4crypt_policy_set_struct(path.c_str(), &policy)) {
+		LOGERR("unable to set policy for path: %s\n", path.c_str());
+		return false;
+	}
+#endif
+	return true;
 }
 #endif // ndef BUILD_TWRPTAR_MAIN

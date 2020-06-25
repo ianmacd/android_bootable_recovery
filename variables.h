@@ -17,7 +17,7 @@
 #ifndef _VARIABLES_HEADER_
 #define _VARIABLES_HEADER_
 
-#define TW_MAIN_VERSION_STR       "3.3.1"
+#define TW_MAIN_VERSION_STR       "3.4.0"
 #define TW_VERSION_STR TW_MAIN_VERSION_STR TW_DEVICE_VERSION
 
 #define TW_USE_COMPRESSION_VAR      "tw_use_compression"
@@ -140,6 +140,7 @@
 #define TW_MILITARY_TIME            "tw_military_time"
 #define TW_USE_SHA2                 "tw_use_sha2"
 #define TW_NO_SHA2                  "tw_no_sha2"
+#define TW_UNMOUNT_SYSTEM           "tw_unmount_system"
 
 // Also used:
 //   tw_boot_is_mountable

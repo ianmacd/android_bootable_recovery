@@ -22,13 +22,23 @@
 #include <string>
 #include <vector>
 
+#ifdef USE_FSCRYPT
+#include <ext4_utils/ext4_crypt.h>
+#else
+#include "ext4crypt_tar.h"
+#endif
+
 #include "twrpDigest/twrpDigest.hpp"
+
+#ifndef BUILD_TWRPTAR_MAIN
+#include "partitions.hpp"
+#endif
 
 using namespace std;
 
-#define NON_AB_CACHE_DIR "/cache/"
-#define AB_CACHE_DIR "/data/cache/"
-#define PERSIST_CACHE_DIR "/persist/cache/"
+#define CACHE_LOGS_DIR "/cache/"		// For devices with a dedicated cache partition
+#define DATA_LOGS_DIR "/data/"			// For devices that do not have a dedicated cache partition
+#define PERSIST_LOGS_DIR "/persist/"	// For devices with neither cache or dedicated data partition
 
 typedef enum
 {
@@ -47,6 +57,7 @@ enum Archive_Type {
 	ENCRYPTED,
 	COMPRESSED_ENCRYPTED
 };
+
 
 // Partition class
 class TWFunc
@@ -90,6 +101,7 @@ public:
 	static int write_to_file(const string& fn, const string& line);             //write to file
 	static bool Try_Decrypting_Backup(string Restore_Path, string Password); // true for success, false for failed to decrypt
 	static string System_Property_Get(string Prop_Name);                // Returns value of Prop_Name from reading /system/build.prop
+	static string System_Property_Get(string Prop_Name, TWPartitionManager &PartitionManager, string Mount_Point);                // Returns value of Prop_Name from reading /system/build.prop
 	static string Get_Current_Date(void);                               // Returns the current date in ccyy-m-dd--hh-nn-ss format
 	static void Auto_Generate_Backup_Name();                            // Populates TW_BACKUP_NAME with a backup name based on current date and ro.build.display.id from /system/build.prop
 	static void Fixup_Time_On_Boot(const string& time_paths = ""); // Fixes time on devices which need it (time_paths is a space separated list of paths to check for ats_* files)
@@ -104,9 +116,12 @@ public:
 	static void copy_kernel_log(string curr_storage); // Copy Kernel Log to Current Storage (PSTORE/KMSG)
 	static bool isNumber(string strtocheck); // return true if number, false if not a number
 	static int stream_adb_backup(string &Restore_Name); // Tell ADB Backup to Stream to TWRP from GUI selection
-	static std::string get_cache_dir(); // return the cache partition existence
+	static std::string get_log_dir(); // return recovery log storage directory
 	static void check_selinux_support(); // print whether selinux support is enabled to console
 	static bool Is_TWRP_App_In_System(); // Check if the TWRP app is installed in the system partition
+	static int Property_Override(string Prop_Name, string Prop_Value); // Override properties (including ro. properties)
+	static bool Get_Encryption_Policy(ext4_encryption_policy &policy, std::string path); // return encryption policy for path
+	static bool Set_Encryption_Policy(std::string path, const ext4_encryption_policy &policy); // set encryption policy for path
 
 private:
 	static void Copy_Log(string Source, string Destination);

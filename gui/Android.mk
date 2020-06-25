@@ -46,6 +46,15 @@ else
     LOCAL_SHARED_LIBRARIES += libminzip
     LOCAL_CFLAGS += -DUSE_MINZIP
 endif
+ifeq ($(TARGET_USERIMAGES_USE_EXT4), true)
+    ifeq ($(shell test $(PLATFORM_SDK_VERSION) -le 28; echo $$?),0)
+        LOCAL_C_INCLUDES += system/extras/ext4_utils \
+            system/extras/ext4_utils/include \
+            $(LOCAL_PATH)/../crypto/ext4crypt
+        LOCAL_SHARED_LIBRARIES += libext4_utils
+    endif
+endif
+
 LOCAL_MODULE := libguitwrp
 
 #TWRP_EVENT_LOGGING := true
@@ -55,7 +64,11 @@ endif
 ifneq ($(TW_USE_KEY_CODE_TOUCH_SYNC),)
     LOCAL_CFLAGS += -DTW_USE_KEY_CODE_TOUCH_SYNC=$(TW_USE_KEY_CODE_TOUCH_SYNC)
 endif
-
+ifneq ($(TW_OZIP_DECRYPT_KEY),)
+    LOCAL_CFLAGS += -DTW_OZIP_DECRYPT_KEY=\"$(TW_OZIP_DECRYPT_KEY)\"
+else
+    LOCAL_CFLAGS += -DTW_OZIP_DECRYPT_KEY=0
+endif
 ifneq ($(TW_NO_SCREEN_BLANK),)
     LOCAL_CFLAGS += -DTW_NO_SCREEN_BLANK
 endif
@@ -80,9 +93,13 @@ endif
 ifeq ($(TW_ROUND_SCREEN), true)
     LOCAL_CFLAGS += -DTW_ROUND_SCREEN
 endif
+ifeq ($(TW_SCREEN_BLANK_ON_BOOT), true)
+    LOCAL_CFLAGS += -DTW_SCREEN_BLANK_ON_BOOT
+endif
 
 LOCAL_C_INCLUDES += \
     bionic \
+    system/core/base/include \
     system/core/include \
     system/core/libpixelflinger/include
 
