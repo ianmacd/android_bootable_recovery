@@ -221,6 +221,7 @@
 		<string name="enable_backup_comp_chk">Compressie inschakelen</string>
 		<string name="skip_digest_backup_chk" version="2">Genereren van digest tijdens back-up overslaan</string>
 		<string name="disable_backup_space_chk" version="2">Controle vrije ruimte uitschakelen</string>
+		<string name="skip_digest_zip_chk">Digestcontrole voor installeren zip overslaan</string>
 		<string name="current_boot_slot">Huidige slot: %tw_active_slot%</string>
 		<string name="boot_slot_a">Slot A</string>
 		<string name="boot_slot_b">Slot B</string>
@@ -729,7 +730,7 @@
 		<string name="include_kernel_log">Kernellog bijvoegen</string>
 		<string name="sha2_chk">SHA2 gebruiken voor hashen</string>
 		<string name="unable_set_boot_slot">Fout tijdens aanpassen opstartslot bootloader in {1}</string>
-		<string name="unmount_sys_install">Ontkoppel System vóór installatie zipbestand</string>
+		<string name="unmount_sys_install">System ontkoppelen vóór installatie zipbestand</string>
 		<string name="unmount_system">System wordt ontkoppeld...</string>
 		<string name="unmount_system_err">Ontkoppelen System mislukt</string>
 		<string name="flash_ab_inactive">A/B zipbestand wordt geflasht naar inactieve slot: {1}</string>
